@@ -153,14 +153,55 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
     }
 
     /**
+     * @param      $value
+     * @param bool $isOrder
+     *
+     * @return bool
+     */
+    protected function isSortActive($value, $isOrder = false) {
+
+        $isOrder = boolval($isOrder);
+        $value   = trim($value);
+
+        $isActive = false;
+
+        if ($isOrder) {
+
+            if ($_REQUEST['order'] == $value) {
+                $isActive = true;
+            }
+
+            if ((empty($_REQUEST['order'])) && ($_SESSION['order'] == $value)) {
+                $isActive = true;
+            }
+
+        } else {
+            if ($_REQUEST['sort'] == $value) {
+                $isActive = true;
+            }
+
+            if ((empty($_REQUEST['sort'])) && ($_SESSION['sort'] == $value)) {
+                $isActive = true;
+            }
+        }
+
+        return $isActive;
+    }
+
+    /**
      * @return $this
      */
     protected function prepareResult() {
 
         global $USER;
 
-        $cacheId = $_REQUEST['sort'];
-        $cacheId .= $_REQUEST['order'] . ' ';
+        $cacheId = $_REQUEST['sort'] . $_REQUEST['order'];
+        $cacheId .= serialize($this->arParams);
+
+        if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
+            $cacheId .= $_SESSION['sort'] . $_SESSION['order'];
+        }
+
         $cacheId .= $USER->GetGroups();
 
         if ($this->StartResultCache(false, $cacheId)) {
@@ -175,37 +216,26 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
                 $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentPrices();
             }
 
-            //Сформируем URL и добавим флаг активности
-            global $APPLICATION;
+        }
 
-            foreach ($result['SORT']['PROPERTIES'] as &$prop) {
+        //Сформируем URL и добавим флаг активности
+        global $APPLICATION;
 
-                $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
-                $isActive    = false;
+        foreach ($result['SORT']['PROPERTIES'] as &$prop) {
 
-                if (htmlspecialchars($_REQUEST['sort'] == $prop['CODE'])) {
-                    $isActive = true;
-                }
+            $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
 
-                $prop['ACTIVE'] = $isActive;
-            }
+            $prop['ACTIVE'] = $this->isSortActive($prop['CODE']);
+        }
 
-            if (!empty($this->arParams['SORT_ORDER'])) {
+        if (!empty($this->arParams['SORT_ORDER'])) {
 
-                foreach ($this->arParams['SORT_ORDER'] as $sortOrder) {
+            foreach ($this->arParams['SORT_ORDER'] as $sortOrder) {
 
-                    $isActive = false;
-
-                    if (htmlspecialchars($_REQUEST['order'] == $sortOrder)) {
-                        $isActive = true;
-                    }
-
-                    $result['SORT']['ORDERS'][] = ['ACTIVE' => $isActive,
-                                                   'CODE'   => $sortOrder,
-                                                   'URL'    => $APPLICATION->GetCurPageParam('order='
-                                                                                             . $sortOrder, ['order'])];
-                }
-
+                $result['SORT']['ORDERS'][] = ['ACTIVE' => $this->isSortActive($sortOrder, $isOrder = true),
+                                               'CODE'   => $sortOrder,
+                                               'URL'    => $APPLICATION->GetCurPageParam('order='
+                                                                                         . $sortOrder, ['order'])];
             }
 
         }
@@ -219,6 +249,9 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
      * @return void
      */
     protected function outputtingSortingParameters() {
+
+        global ${$this->arParams['SORT_NAME']};
+        global ${$this->arParams['ORDER_NAME']};
 
         if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
 
