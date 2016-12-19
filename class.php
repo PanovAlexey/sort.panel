@@ -4,7 +4,7 @@
  * Date: 24.11.2016
  * Time: 11:00
  *
- * @author    Alexey Panov <alexeykapanov@gmail.com>
+ * @author    Alexey Panov <panov@codeblog.pro>
  * @copyright Copyright © 2016, Alexey Panov
  */
 
@@ -18,6 +18,8 @@ use \Bitrix\Main\SystemException;
 
 class CCodeblogSortPanelComponent extends \CBitrixComponent
 {
+
+    protected $requiredModules = ['iblock'];
 
     /**
      * @return array
@@ -52,9 +54,46 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
         return $sortingParams;
     }
 
-    protected $requiredModules = ['iblock'];
+    /**
+     * @return array
+     */
+    public function getSortOrderListByCurrentProperties() {
+
+        $propertyList = [];
+
+        $propertiesCollection = \Bitrix\Iblock\PropertyTable::getList(['select' => ['NAME',
+                                                                                    'CODE'],
+                                                                       'filter' => ['IBLOCK_ID' => (int)$this->arParams['IBLOCK_ID'],
+                                                                                    'CODE'      => $this->arParams['PROPERTY_CODE'],],]);
+        while ($property = $propertiesCollection->fetch()) {
+            $property['CODE'] = 'property_' . $property['CODE'];
+            $propertyList[]   = $property;
+        }
+
+        return $propertyList;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSortOrderListByCurrentPrices() {
+
+        $propertyList = [];
+
+        $priceTypeCollection = \CCatalogGroup::GetList(['SORT' => 'ASC'], ['ID' => $this->arParams['PRICE_CODE']]);
+
+        while ($priceType = $priceTypeCollection->Fetch()) {
+
+            $property['NAME'] = $priceType['NAME_LANG'];
+            $property['CODE'] = 'catalog_PRICE_' . $priceType['ID'];
+            $propertyList[]   = $property;
+        }
+
+        return $propertyList;
+    }
 
     protected function checkModules() {
+
         foreach ($this->requiredModules as $moduleName) {
             if (!Loader::includeModule($moduleName)) {
                 throw new SystemException(Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_NO_MODULE', ['#MODULE#',
@@ -113,27 +152,100 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
         Loc::loadMessages(__FILE__);
     }
 
+    /**
+     * @return $this
+     */
     protected function prepareResult() {
 
         global $USER;
 
-        $cacheId = $_REQUEST['sort'] . ' ';
+        $cacheId = $_REQUEST['sort'];
         $cacheId .= $_REQUEST['order'] . ' ';
         $cacheId .= $USER->GetGroups();
 
         if ($this->StartResultCache(false, $cacheId)) {
-            $this->IncludeComponentTemplate();
+
+            $result['SORT']['PROPERTIES'] = self::getSortOrderList()['TYPES_LIST'];
+
+            if ($this->arParams['PROPERTY_CODE']) {
+                $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentProperties();
+            }
+
+            if ($this->arParams['PRICE_CODE']) {
+                $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentPrices();
+            }
+
+            //Сформируем URL и добавим флаг активности
+            global $APPLICATION;
+
+            foreach ($result['SORT']['PROPERTIES'] as &$prop) {
+
+                $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
+                $isActive    = false;
+
+                if (htmlspecialchars($_REQUEST['sort'] == $prop['CODE'])) {
+                    $isActive = true;
+                }
+
+                $prop['ACTIVE'] = $isActive;
+            }
+
+            if (!empty($this->arParams['SORT_ORDER'])) {
+
+                foreach ($this->arParams['SORT_ORDER'] as $sortOrder) {
+
+                    $isActive = false;
+
+                    if (htmlspecialchars($_REQUEST['order'] == $sortOrder)) {
+                        $isActive = true;
+                    }
+
+                    $result['SORT']['ORDERS'][] = ['ACTIVE' => $isActive,
+                                                   'CODE'   => $sortOrder,
+                                                   'URL'    => $APPLICATION->GetCurPageParam('order='
+                                                                                             . $sortOrder, ['order'])];
+                }
+
+            }
+
         }
+
+        $this->arResult = $result;
 
         return $this;
     }
 
+    /**
+     * @return void
+     */
+    protected function outputtingSortingParameters() {
+
+        if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
+
+            if (empty($_REQUEST['sort'])) {
+                ${$this->arParams['SORT_NAME']} = $_SESSION['sort'];
+            } else {
+                $_SESSION['sort']               = $_REQUEST['sort'];
+                ${$this->arParams['SORT_NAME']} = $_REQUEST['sort'];
+            }
+
+            if (empty($_REQUEST['order'])) {
+                ${$this->arParams['ORDER_NAME']} = $_SESSION['order'];
+            } else {
+                $_SESSION['order']               = $_REQUEST['order'];
+                ${$this->arParams['ORDER_NAME']} = $_REQUEST['order'];
+            }
+        } else {
+            ${$this->arParams['SORT_NAME']}  = $_REQUEST['sort'];
+            ${$this->arParams['ORDER_NAME']} = $_REQUEST['order'];
+        }
+
+    }
+
     public function executeComponent() {
-
-        global $APPLICATION;
-
         try {
             $this->checkModules()->prepareResult();
+            $this->outputtingSortingParameters();
             $this->includeComponentTemplate();
         } catch (SystemException $e) {
             self::__showError($e->getMessage());
