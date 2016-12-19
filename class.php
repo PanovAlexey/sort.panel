@@ -54,10 +54,6 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
 
     protected $requiredModules = ['iblock'];
 
-    protected function isAjax() {
-        return isset($_REQUEST['ajax']) && $_REQUEST['ajax'] == 'y';
-    }
-
     protected function checkModules() {
         foreach ($this->requiredModules as $moduleName) {
             if (!Loader::includeModule($moduleName)) {
@@ -133,6 +129,7 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
     }
 
     public function executeComponent() {
+
         global $APPLICATION;
 
         try {
