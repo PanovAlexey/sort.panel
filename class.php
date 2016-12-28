@@ -35,6 +35,7 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
                                          'asc,nulls'  => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_ASC_NULLS_VALUE'),
                                          'desc'       => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_DESC_VALUE'),
                                          'nulls,desc' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_NULLS_DESC_VALUE'),
+
                                          'desc,nulls' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_DESC_NULLS_VALUE')];
 
         $sortingParams['ORDERS_DEFAULT_LIST'] = ['asc'  => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_ASC_VALUE'),
@@ -206,7 +207,11 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
 
         $cacheId .= $USER->GetGroups();
 
-        if ($this->StartResultCache(false, $cacheId)) {
+        $cache = new CPHPCache();
+
+        if ($cache->InitCache($this->arParams['CACHE_TIME'], $cacheId, '/sort.panel/')) {
+            $result = $cache->GetVars();
+        } elseif ($cache->StartDataCache()) {
 
             $result['SORT']['PROPERTIES'] = self::getSortOrderList()['TYPES_LIST'];
 
@@ -218,6 +223,7 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
                 $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentPrices();
             }
 
+            $cache->EndDataCache($result);
         }
 
         //Сформируем URL и добавим флаг активности
