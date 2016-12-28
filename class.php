@@ -26,6 +26,8 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
      */
     public static function getSortOrderList() {
 
+        Loc::loadMessages(__FILE__);
+
         $sortingParams = [];
 
         $sortingParams['ORDERS_LIST'] = ['asc'        => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_ASC_VALUE'),
