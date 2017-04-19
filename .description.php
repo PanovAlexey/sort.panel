@@ -1,16 +1,19 @@
-<? if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
-    die();
-}
+<?
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
-use Bitrix\Main\Localization\Loc;
-
-Loc::loadMessages(__FILE__);
-$arComponentDescription = ['NAME'        => Loc::getMessage('SORT_PANEL_COMPONENT_NAME_VALUE'),
-                           'DESCRIPTION' => Loc::getMessage('SORT_PANEL_COMPONENT_DESCRIPTION_VALUE'),
-                           'ICON'        => '/images/icon.gif',
-                           'SORT'        => 10,
-                           'CACHE_PATH'  => 'Y',
-                           'PATH'        => ['ID'    => 'codeblog.pro',
-                                             'CHILD' => ['ID'   => 'Content',
-                                                         'NAME' => Loc::getMessage('SORT_PANEL_COMPONENT_TYPE_CONTENT_VALUE'),],],
-                           'COMPLEX'     => 'N',];
+$arComponentDescription = array(
+	"NAME" => GetMessage("CODEBLOGPRO_SORT_PANEL_COMPONENT_NAME_VALUE"),
+	"DESCRIPTION" => GetMessage("CODEBLOGPRO_SORT_PANEL_COMPONENT_DESCRIPTION_VALUE"),
+	"ICON" => "/images/regions.gif",
+	"SORT" => 100,
+	"PATH" => array(
+		"ID" => "codeblog.pro",
+		"SORT" => 500,
+		"NAME" => GetMessage("CODEBLOGPRO_SORT.PANEL_COMPONENTS_FOLDER_NAME"),
+		"CHILD" => array(
+			"ID" => GetMessage("CODEBLOGPRO_SORT_PANEL_COMPONENT_TYPE_CONTENT_VALUE"),
+			"NAME" => '',
+			"SORT" => 500,
+		)
+	),
+);

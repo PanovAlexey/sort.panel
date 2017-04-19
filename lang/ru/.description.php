@@ -2,6 +2,7 @@
     die();
 }
 
-$MESS['SORT_PANEL_COMPONENT_NAME_VALUE']         = 'РџР°РЅРµР»СЊ СЃРѕСЂС‚РёСЂРѕРІРєРё СЌР»РµРјРµРЅС‚РѕРІ';
-$MESS['SORT_PANEL_COMPONENT_DESCRIPTION_VALUE']  = 'РљРѕРјРїРѕРЅРµРЅС‚ РІС‹РІРѕРґРёС‚ РїР°РЅРµР»СЊ РґР»СЏ РІС‹Р±РѕСЂР° СЃРѕСЂС‚РёСЂРѕРІРєРё СЌР»РµРјРµРЅС‚РѕРІ СЂР°Р·РґРµР»Р°,Р° С‚Р°Рє Р¶Рµ С„РѕСЂРјРёСЂСѓРµС‚ РЅР°Р·РІР°РЅРёРµ СЃРІРѕР№СЃС‚РІР° Рё РЅР°РїСЂР°РІР»РµРЅРёРµ СЃРѕСЂС‚РёСЂРѕРІРєРё';
-$MESS['SORT_PANEL_COMPONENT_TYPE_CONTENT_VALUE'] = 'РљРѕРЅС‚РµРЅС‚';
+$MESS['CODEBLOGPRO_SORT_PANEL_COMPONENT_NAME_VALUE']         = 'Панель сортировки элементов';
+$MESS['CODEBLOGPRO_SORT_PANEL_COMPONENT_DESCRIPTION_VALUE']  = 'Компонент выводит панель для выбора сортировки 
+    элементов раздела,а так же формирует название свойства и направление сортировки';
+$MESS['CODEBLOGPRO_SORT_PANEL_COMPONENT_TYPE_CONTENT_VALUE'] = 'Контент';

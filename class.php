@@ -1,11 +1,12 @@
 <?
 /**
- * Created by PhpStorm.
- * Date: 24.11.2016
+ * Created by Alexey Panov.
+ * Date: 24.12.2016
  * Time: 11:00
  *
  * @author    Alexey Panov <panov@codeblog.pro>
- * @copyright Copyright © 2016, Alexey Panov
+ * @copyright Copyright ? 2016, Alexey Panov
+ * @git repository https://github.com/PanovAlexey/sort.panel
  */
 
 if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
@@ -16,7 +17,7 @@ use \Bitrix\Main\Loader;
 use \Bitrix\Main\Localization\Loc;
 use \Bitrix\Main\SystemException;
 
-class CCodeblogSortPanelComponent extends \CBitrixComponent
+class CCodeblogProSortPanelComponent extends \CBitrixComponent
 {
 
     protected $requiredModules = ['iblock'];
@@ -38,8 +39,7 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
 
                                          'desc,nulls' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_DESC_NULLS_VALUE')];
 
-        $sortingParams['ORDERS_DEFAULT_LIST'] = ['asc'  => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_ASC_VALUE'),
-                                                 'desc' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_ORDER_DESC_VALUE')];
+        $sortingParams['ORDERS_DEFAULT_LIST'] = ['asc', 'desc'];
 
         $sortingParams['TYPES_LIST'] = [['NAME' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_TYPES_NAME_VALUE'),
                                          'CODE' => 'name'],
@@ -60,6 +60,23 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
     /**
      * @return array
      */
+    public function getSortOrderListByCurrentFields() {
+
+        $allFieldsList = self::getSortOrderList()['TYPES_LIST'];
+        $fieldsList = array();
+
+        foreach ($allFieldsList as $field) {
+            if (in_array($field['CODE'], $this->arParams['FIELDS_CODE'])) {
+                $fieldsList[$field['CODE']] = $field;
+            }
+        }
+
+        return $fieldsList;
+    }
+
+    /**
+     * @return array
+     */
     public function getSortOrderListByCurrentProperties() {
 
         $propertyList = [];
@@ -70,7 +87,7 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
                                                                                     'CODE'      => $this->arParams['PROPERTY_CODE'],],]);
         while ($property = $propertiesCollection->fetch()) {
             $property['CODE'] = 'property_' . $property['CODE'];
-            $propertyList[]   = $property;
+            $propertyList[$property['CODE']]   = $property;
         }
 
         return $propertyList;
@@ -83,13 +100,15 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
 
         $propertyList = [];
 
-        $priceTypeCollection = \CCatalogGroup::GetList(['SORT' => 'ASC'], ['ID' => $this->arParams['PRICE_CODE']]);
+        if (Loader::includeModule('catalog')) {
+            $priceTypeCollection = \CCatalogGroup::GetList(['SORT' => 'ASC'], ['ID' => $this->arParams['PRICE_CODE']]);
 
-        while ($priceType = $priceTypeCollection->Fetch()) {
+            while ($priceType = $priceTypeCollection->Fetch()) {
 
-            $property['NAME'] = $priceType['NAME_LANG'];
-            $property['CODE'] = 'catalog_PRICE_' . $priceType['ID'];
-            $propertyList[]   = $property;
+                $property['NAME'] = $priceType['NAME_LANG'];
+                $property['CODE'] = 'catalog_PRICE_' . $priceType['ID'];
+                $propertyList[$property['CODE']]   = $property;
+            }
         }
 
         return $propertyList;
@@ -213,20 +232,29 @@ class CCodeblogSortPanelComponent extends \CBitrixComponent
             $result = $cache->GetVars();
         } elseif ($cache->StartDataCache()) {
 
-            $result['SORT']['PROPERTIES'] = self::getSortOrderList()['TYPES_LIST'];
+            $result['SORT']['PROPERTIES'] = array();
+
+            if ($this->arParams['FIELDS_CODE']) {
+                $result['SORT']['PROPERTIES'] = array_merge(
+                    $result['SORT']['PROPERTIES'], $this->getSortOrderListByCurrentFields()
+                );
+            }
 
             if ($this->arParams['PROPERTY_CODE']) {
-                $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentProperties();
+                $result['SORT']['PROPERTIES'] = array_merge(
+                    $result['SORT']['PROPERTIES'], $this->getSortOrderListByCurrentProperties()
+                );
             }
 
             if ($this->arParams['PRICE_CODE']) {
-                $result['SORT']['PROPERTIES'][] = $this->getSortOrderListByCurrentPrices();
+                $result['SORT']['PROPERTIES'] = array_merge(
+                    $result['SORT']['PROPERTIES'], $this->getSortOrderListByCurrentPrices()
+                );
             }
 
             $cache->EndDataCache($result);
         }
 
-        //Сформируем URL и добавим флаг активности
         global $APPLICATION;
 
         foreach ($result['SORT']['PROPERTIES'] as &$prop) {
