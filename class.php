@@ -20,6 +20,8 @@ use \Bitrix\Main\SystemException;
 class CCodeblogProSortPanelComponent extends \CBitrixComponent
 {
 
+    const DEFAULT_ORDER_VALUE = 'asc';
+
     protected $requiredModules = ['iblock'];
 
     /**
@@ -213,6 +215,75 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
     }
 
     /**
+     * @param string $sortOrder
+     *
+     * @return string
+     */
+    protected function getInvertSortOrder($sortOrder) {
+
+        $sortOrder = trim($sortOrder);
+        $invertSortOrder = '';
+
+        if (empty($sortOrder) || $sortOrder == 'asc') {
+            $invertSortOrder = 'desc';
+        }
+        elseif ($sortOrder == 'desc') {
+            $invertSortOrder = 'asc';
+        }
+        elseif ($sortOrder == 'nulls,asc') {
+            $invertSortOrder = 'asc,nulls';
+        }
+        elseif ($sortOrder == 'asc,nulls') {
+            $invertSortOrder = 'nulls,asc';
+        }
+        elseif ($sortOrder == 'nulls,desc') {
+            $invertSortOrder = 'desc,nulls';
+        }
+        elseif ($sortOrder == 'desc,nulls') {
+            $invertSortOrder = 'nulls,desc';
+        }
+
+        return $invertSortOrder;
+    }
+
+    /**
+     * @param bool $isOrder
+     *
+     * @return string
+     */
+    protected function getCurrentSort( $isOrder = false) {
+        $isOrder = boolval($isOrder);
+        $value = '';
+
+        if ($isOrder) {
+
+            if (isset($_REQUEST['order']) && (!empty($_REQUEST['order']))) {
+                $value = $_REQUEST['order'];
+            }
+
+            if ((!isset($_REQUEST['order']) || empty($_REQUEST['order']))
+                && (isset($_SESSION['order']) && (!empty($_SESSION['order'])))) {
+                $value = $_SESSION['order'];
+            }
+
+            if (!isset($_REQUEST['order']) || !isset($_REQUEST['sort'])) {
+                $value = self::DEFAULT_ORDER_VALUE;
+            }
+        } else {
+            if (isset($_REQUEST['sort']) && (!empty($_REQUEST['sort']))) {
+                $value = $_REQUEST['sort'];
+            }
+
+            if ((!isset($_REQUEST['sort']) || empty($_REQUEST['sort']))
+                && (isset($_SESSION['sort']) && (!empty($_SESSION['sort'])))) {
+                $value = $_SESSION['sort'];
+            }
+        }
+
+        return $value;
+    }
+
+    /**
      * @return $this
      */
     protected function prepareResult() {
@@ -261,9 +332,18 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         foreach ($result['SORT']['PROPERTIES'] as &$prop) {
 
-            $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
-
             $prop['ACTIVE'] = $this->isSortActive($prop['CODE']);
+
+            if ($prop['ACTIVE']) {
+                $invertCurrentSortOrder = $this->getInvertSortOrder( $this->getCurrentSort($isOrder = true));
+                $prop['URL'] = $APPLICATION->GetCurPageParam(
+                    'sort=' . $prop['CODE'] . '&order=' . $invertCurrentSortOrder,
+                    ['sort', 'order']
+                );
+            }
+            else {
+                $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
+            }
         }
 
         if (!empty($this->arParams['SORT_ORDER'])) {
