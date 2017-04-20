@@ -19,9 +19,6 @@ if (!empty($arResult['SORT']['PROPERTIES'])) { ?>
             elseif (strpos($property['ORDER'], 'desc') !== false) {
                 echo '&uarr;';
             }
-            else{
-                echo '&uarr;';
-            }
             ?></a>&nbsp
         <? } else { ?>
             <a href="<?= $property['URL']; ?>"><?= $property['NAME'] ?></a>&nbsp

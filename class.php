@@ -16,6 +16,8 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
 use \Bitrix\Main\Loader;
 use \Bitrix\Main\Localization\Loc;
 use \Bitrix\Main\SystemException;
+use \Bitrix\Main\Application;
+
 
 class CCodeblogProSortPanelComponent extends \CBitrixComponent
 {
@@ -186,6 +188,8 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
      */
     protected function isSortActive($value, $isOrder = false) {
 
+        $request = Application::getInstance()->getContext()->getRequest();
+
         $isOrder = boolval($isOrder);
         $value   = trim($value);
 
@@ -193,20 +197,23 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         if ($isOrder) {
 
-            if ($_REQUEST['order'] == $value) {
+            if ($request->getQuery('order') == $value) {
                 $isActive = true;
             }
 
-            if ((empty($_REQUEST['order'])) && ($_SESSION['order'] == $value)) {
+            if ((empty($request->getQuery('order'))) && ($_SESSION['order'] == $value)
+                && ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y')
+            ) {
                 $isActive = true;
             }
-
         } else {
-            if ($_REQUEST['sort'] == $value) {
+            if ($request->getQuery('sort') == $value) {
                 $isActive = true;
             }
 
-            if ((empty($_REQUEST['sort'])) && ($_SESSION['sort'] == $value)) {
+            if ((empty($request->getQuery('sort'))) && ($_SESSION['sort'] == $value)
+                && ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y')
+            ) {
                 $isActive = true;
             }
         }
@@ -252,31 +259,34 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
      * @return string
      */
     protected function getCurrentSort( $isOrder = false) {
+
+        $request = Application::getInstance()->getContext()->getRequest();
+
         $isOrder = boolval($isOrder);
         $value = '';
 
         if ($isOrder) {
 
-            if (isset($_REQUEST['order']) && (!empty($_REQUEST['order']))) {
-                $value = $_REQUEST['order'];
+            if ((!empty($request->getQuery('order')))) {
+                $value = $request->getQuery('order');
             }
 
-            if ((!isset($_REQUEST['order']) || empty($_REQUEST['order']))
-                && (isset($_SESSION['order']) && (!empty($_SESSION['order'])))) {
-                $value = $_SESSION['order'];
+            if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
+                if ((empty($request->getQuery('order'))) && (isset($_SESSION['order']) && (!empty($_SESSION['order'])))) {
+                    $value = $_SESSION['order'];
+                }
             }
 
-            if (!isset($_REQUEST['order']) || !isset($_REQUEST['sort'])) {
-                $value = self::DEFAULT_ORDER_VALUE;
-            }
         } else {
-            if (isset($_REQUEST['sort']) && (!empty($_REQUEST['sort']))) {
-                $value = $_REQUEST['sort'];
+            if (!empty($request->getQuery('sort'))) {
+                $value = $request->getQuery('sort');
             }
 
-            if ((!isset($_REQUEST['sort']) || empty($_REQUEST['sort']))
-                && (isset($_SESSION['sort']) && (!empty($_SESSION['sort'])))) {
-                $value = $_SESSION['sort'];
+            if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
+                if ((empty($request->getQuery('sort')))
+                    && (isset($_SESSION['sort']) && (!empty($_SESSION['sort'])))) {
+                    $value = $_SESSION['sort'];
+                }
             }
         }
 
@@ -290,7 +300,9 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         global $USER;
 
-        $cacheId = $_REQUEST['sort'] . $_REQUEST['order'];
+        $request = Application::getInstance()->getContext()->getRequest();
+
+        $cacheId = $request->getQuery('sort') . $request->getQuery('order');
         $cacheId .= serialize($this->arParams);
 
         if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
@@ -373,24 +385,26 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
         global ${$this->arParams['SORT_NAME']};
         global ${$this->arParams['ORDER_NAME']};
 
+        $request = Application::getInstance()->getContext()->getRequest();
+
         if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
 
-            if (empty($_REQUEST['sort'])) {
+            if (empty($request->getQuery('sort'))) {
                 ${$this->arParams['SORT_NAME']} = $_SESSION['sort'];
             } else {
-                $_SESSION['sort']               = $_REQUEST['sort'];
-                ${$this->arParams['SORT_NAME']} = $_REQUEST['sort'];
+                $_SESSION['sort']               = $request->getQuery('sort');
+                ${$this->arParams['SORT_NAME']} = $request->getQuery('sort');
             }
 
-            if (empty($_REQUEST['order'])) {
+            if (empty($request->getQuery('order'))) {
                 ${$this->arParams['ORDER_NAME']} = $_SESSION['order'];
             } else {
-                $_SESSION['order']               = $_REQUEST['order'];
-                ${$this->arParams['ORDER_NAME']} = $_REQUEST['order'];
+                $_SESSION['order']               = $request->getQuery('order');
+                ${$this->arParams['ORDER_NAME']} = $request->getQuery('order');
             }
         } else {
-            ${$this->arParams['SORT_NAME']}  = $_REQUEST['sort'];
-            ${$this->arParams['ORDER_NAME']} = $_REQUEST['order'];
+            ${$this->arParams['SORT_NAME']}  = $request->getQuery('sort');
+            ${$this->arParams['ORDER_NAME']} = $request->getQuery('order');
         }
 
     }
