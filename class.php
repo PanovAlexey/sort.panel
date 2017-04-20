@@ -336,12 +336,14 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
             if ($prop['ACTIVE']) {
                 $invertCurrentSortOrder = $this->getInvertSortOrder( $this->getCurrentSort($isOrder = true));
+                $prop['ORDER'] = $invertCurrentSortOrder;
                 $prop['URL'] = $APPLICATION->GetCurPageParam(
                     'sort=' . $prop['CODE'] . '&order=' . $invertCurrentSortOrder,
                     ['sort', 'order']
                 );
             }
             else {
+                $prop['ORDER'] = $this->getCurrentSort(true);
                 $prop['URL'] = $APPLICATION->GetCurPageParam('sort=' . $prop['CODE'], ['sort']);
             }
         }
