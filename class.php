@@ -5,7 +5,7 @@
  * Time: 11:00
  *
  * @author    Alexey Panov <panov@codeblog.pro>
- * @copyright Copyright ? 2016, Alexey Panov
+ * @copyright Copyright 2016, Alexey Panov
  * @git repository https://github.com/PanovAlexey/sort.panel
  */
 
@@ -53,6 +53,8 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
                                          'CODE' => 'show_counter'],
                                         ['NAME' => Loc::getMessage('COMPONENT_SORT_PANEL_COMPONENT_SORT_TYPES_DATE_VALUE'),
                                          'CODE' => 'created']];
+
+        $sortingParams['FIELDS_DEFAULT_LIST'] = ['name', 'sort', 'created'];
 
         return $sortingParams;
     }

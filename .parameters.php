@@ -68,7 +68,6 @@ if (Loader::includeModule('catalog')) {
     }
 }
 
-
 include 'class.php';
 $sortParametrs = CCodeblogProSortPanelComponent::getSortOrderList();
 
