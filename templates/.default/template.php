@@ -13,11 +13,13 @@ if (!empty($arResult['SORT']['PROPERTIES'])) { ?>
             /**
              * Show sorting direction
              */
-            if (strpos($property['ORDER'], 'asc') !== false) {
-                echo '&darr;';
-            }
-            elseif (strpos($property['ORDER'], 'desc') !== false) {
-                echo '&uarr;';
+            if ($property['CODE'] != 'rand') {
+                if (strpos($property['ORDER'], 'asc') !== false) {
+                    echo '&darr;';
+                }
+                elseif (strpos($property['ORDER'], 'desc') !== false) {
+                    echo '&uarr;';
+                }
             }
             ?></a>&nbsp
         <? } else { ?>

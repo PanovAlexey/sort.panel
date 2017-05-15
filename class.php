@@ -190,7 +190,7 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         $request = Application::getInstance()->getContext()->getRequest();
 
-        $isOrder = boolval($isOrder);
+        $isOrder = (bool)$isOrder;
         $value   = trim($value);
 
         $isActive = false;
@@ -201,7 +201,9 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
                 $isActive = true;
             }
 
-            if ((empty($request->getQuery('order'))) && ($_SESSION['order'] == $value)
+            $order = $request->getQuery('order');
+
+            if (empty($order) && ($_SESSION['order'] == $value)
                 && ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y')
             ) {
                 $isActive = true;
@@ -211,7 +213,9 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
                 $isActive = true;
             }
 
-            if ((empty($request->getQuery('sort'))) && ($_SESSION['sort'] == $value)
+            $sort = $request->getQuery('sort');
+
+            if (empty($sort) && ($_SESSION['sort'] == $value)
                 && ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y')
             ) {
                 $isActive = true;
@@ -262,28 +266,33 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         $request = Application::getInstance()->getContext()->getRequest();
 
-        $isOrder = boolval($isOrder);
+        $isOrder = (bool)$isOrder;
         $value = '';
 
         if ($isOrder) {
 
-            if ((!empty($request->getQuery('order')))) {
+            $order = $request->getQuery('order');
+
+            if (!empty($order)) {
                 $value = $request->getQuery('order');
             }
 
             if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
-                if ((empty($request->getQuery('order'))) && (isset($_SESSION['order']) && (!empty($_SESSION['order'])))) {
+                if ((empty($order)) && (isset($_SESSION['order']) && (!empty($_SESSION['order'])))) {
                     $value = $_SESSION['order'];
                 }
             }
 
         } else {
-            if (!empty($request->getQuery('sort'))) {
+
+            $sort = $request->getQuery('sort');
+
+            if (!empty($sort)) {
                 $value = $request->getQuery('sort');
             }
 
             if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
-                if ((empty($request->getQuery('sort')))
+                if ((empty($sort))
                     && (isset($_SESSION['sort']) && (!empty($_SESSION['sort'])))) {
                     $value = $_SESSION['sort'];
                 }
@@ -346,13 +355,20 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
             $prop['ACTIVE'] = $this->isSortActive($prop['CODE']);
 
-            if ($prop['ACTIVE']) {
+            if ($prop['CODE'] == 'rand') {
+                $prop['URL'] = $APPLICATION->GetCurPageParam(
+                    'sort=' . $prop['CODE'],
+                    ['sort', 'order']
+                );
+            }
+            elseif ($prop['ACTIVE']) {
                 $invertCurrentSortOrder = $this->getInvertSortOrder( $this->getCurrentSort($isOrder = true));
                 $prop['ORDER'] = $invertCurrentSortOrder;
                 $prop['URL'] = $APPLICATION->GetCurPageParam(
                     'sort=' . $prop['CODE'] . '&order=' . $invertCurrentSortOrder,
                     ['sort', 'order']
                 );
+
             }
             else {
                 $prop['ORDER'] = $this->getCurrentSort(true);
@@ -389,14 +405,18 @@ class CCodeblogProSortPanelComponent extends \CBitrixComponent
 
         if ($this->arParams['INCLUDE_SORT_TO_SESSION'] == 'Y') {
 
-            if (empty($request->getQuery('sort'))) {
+            $sort = $request->getQuery('sort');
+
+            if (empty($sort)) {
                 ${$this->arParams['SORT_NAME']} = $_SESSION['sort'];
             } else {
                 $_SESSION['sort']               = $request->getQuery('sort');
                 ${$this->arParams['SORT_NAME']} = $request->getQuery('sort');
             }
 
-            if (empty($request->getQuery('order'))) {
+            $order = $request->getQuery('order');
+
+            if (empty($order)) {
                 ${$this->arParams['ORDER_NAME']} = $_SESSION['order'];
             } else {
                 $_SESSION['order']               = $request->getQuery('order');
